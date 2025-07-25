@@ -11,7 +11,7 @@ def show_login():
     st.subheader("🔐 Connect your Gmail account")
     if st.button("Login with Google"):
         flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-        creds = flow.run_console()
+        creds = flow.run_local_server(port=0)
         st.session_state.credentials = creds
 
         # ✅ Get user's Gmail address
