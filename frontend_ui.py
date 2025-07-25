@@ -35,7 +35,8 @@ def show_login():
 
     # 🔁 If token.json not yet created, guide user
     st.warning("Please login via the Flask Auth Server first.")
-    st.markdown("👉 [Click here to login](https://your-flask-app.onrender.com/login)")
+    st.markdown("👉 [Click here to login](https://smart-expense-login.onrender.com/login)")
+
 
 
 def setup_sidebar(default_start, default_end):

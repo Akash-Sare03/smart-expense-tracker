@@ -62,7 +62,7 @@ def callback():
     with open("token.json", "w") as token:
         json.dump(session['credentials'], token)
 
-    return redirect("https://smart-expense-tracker-sldw.onrender.com")  # your Streamlit app
+    return redirect("https://smart-expense-tracker-sldw.onrender.com")  #  Streamlit app
 
 
 if __name__ == "__main__":
