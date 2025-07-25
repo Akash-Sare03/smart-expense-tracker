@@ -7,7 +7,9 @@ import os
 import json
 
 app = Flask(__name__)
-app.secret_key = "c89f6d871f79a9e8b01c65b9abf99e55f9c261748f7c228327ca77a841e2d90c"  # Replace this with a secure random key
+app.secret_key = "d4f72b1e8d2e45a0a9f7c9f109e9ab51"                # Replace this with a secure random key
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  # For development/testing only
 
