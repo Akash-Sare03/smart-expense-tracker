@@ -1,7 +1,7 @@
 streamlit
 pandas
 google-auth
-google-auth-oauthlib
+google-auth-oauthlib>=1.0.0
 google-api-python-client
 beautifulsoup4
 matplotlib
