@@ -21,12 +21,14 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 def index():
     return "✅ Auth server is running! Go to /login to authenticate with Google."
 
+REDIRECT_URI = "https://smart-expense-login.onrender.com/callback"
+
 @app.route("/login")
 def login():
     flow = Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE,
         scopes=SCOPES,
-        redirect_uri=url_for('callback', _external=True)
+        redirect_uri=REDIRECT_URI
     )
     auth_url, state = flow.authorization_url(prompt='consent', access_type='offline', include_granted_scopes='true')
     session["state"] = state
@@ -34,12 +36,15 @@ def login():
 
 @app.route("/callback")
 def callback():
-    state = session["state"]
+    state = session.get("state")
+    if not state:
+        return "Session expired or state not found. Please try logging in again.", 400
+
     flow = Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE,
         scopes=SCOPES,
         state=state,
-        redirect_uri=url_for('callback', _external=True)
+        redirect_uri=REDIRECT_URI
     )
     flow.fetch_token(authorization_response=request.url)
 
@@ -53,11 +58,12 @@ def callback():
         'scopes': credentials.scopes
     }
 
-    # ✅ Save credentials to file (shared with Streamlit)
+    # Save token for Streamlit app
     with open("token.json", "w") as token:
         json.dump(session['credentials'], token)
 
-    return redirect("https://smart-expense-tracker-sldw.onrender.com")  # 🔁 Your Streamlit app link here
+    return redirect("https://smart-expense-tracker-sldw.onrender.com")  # your Streamlit app
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
