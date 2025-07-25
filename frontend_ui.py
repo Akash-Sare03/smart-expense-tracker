@@ -6,21 +6,37 @@ import pandas as pd
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from utils import SCOPES
+from google.oauth2.credentials import Credentials
+import os
+import json
+
+
+from google.oauth2.credentials import Credentials
+import os
+import json
 
 def show_login():
     st.subheader("🔐 Connect your Gmail account")
-    if st.button("Login with Google"):
-        flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-        creds = flow.run_local_server(port=0)
+
+    token_path = "token.json"
+    if os.path.exists(token_path):
+        # ✅ Load saved credentials from Flask login
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
         st.session_state.credentials = creds
 
-        # ✅ Get user's Gmail address
+        # ✅ Extract user's email
+        from googleapiclient.discovery import build
         service = build('gmail', 'v1', credentials=creds)
         user_info = service.users().getProfile(userId='me').execute()
         st.session_state.user_email = user_info['emailAddress']
 
         st.success(f"✅ Logged in as: {st.session_state.user_email}")
-        st.rerun()
+        return
+
+    # 🔁 If token.json not yet created, guide user
+    st.warning("Please login via the Flask Auth Server first.")
+    st.markdown("👉 [Click here to login](https://your-flask-app.onrender.com/login)")
+
 
 def setup_sidebar(default_start, default_end):
     start_date = st.sidebar.date_input("Start Date", default_start.date())
