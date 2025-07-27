@@ -9,41 +9,50 @@ from utils import SCOPES
 import json
 
 
+import streamlit as st
+import json
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
+from utils import SCOPES
+
 def show_login():
     st.subheader("🔐 Connect your Gmail account")
 
-    st.markdown("👉 Click the link below to log in with your Gmail:")
-    st.markdown(
-        "[🔗 Click here to login with Google](https://accounts.google.com/o/oauth2/auth)",
-        unsafe_allow_html=True
+    # ✅ Load client config from Streamlit secrets
+    config_str = st.secrets["gcp"]["client_config"]
+    config = json.loads(config_str)
+
+    # ✅ Create Flow instance with Streamlit Cloud redirect URI
+    flow = Flow.from_client_config(
+        config,
+        scopes=SCOPES,
+        redirect_uri="https://smart-expense-tracker-8sugdqlzf2rp2f5mkpt5tl.streamlit.app"
     )
 
-    # 📷 Login flow guidance image (you can also use a GIF link here)
-    
-    st.markdown("🔑 Paste the **full URL** you were redirected to (we'll extract the code):")
-    auth_url = st.text_input("🔗 Redirected URL")
+    # ✅ Get proper Google Auth URL
+    auth_url, _ = flow.authorization_url(prompt='consent', access_type='offline', include_granted_scopes='true')
+
+    # ✅ Show instructions
+    st.markdown(f"[🔗 Click here to login with Google]({auth_url})", unsafe_allow_html=True)
+    #st.image("https://i.imgur.com/fJc3w8U.gif", caption="After login, copy the full URL you were redirected to", width=500)
+
+    auth_response = st.text_input("🔑 Paste the **full redirect URL** after login:")
 
     if st.button("Submit Code"):
-        if "code=" not in auth_url:
+        if "code=" not in auth_response:
             st.error("❌ URL does not contain a valid authorization code.")
             return
 
         try:
-            # ✅ Extract the authorization code from URL
-            code = auth_url.split("code=")[1].split("&")[0]
-
-            # ✅ Load credentials from Streamlit secrets
-            config_str = st.secrets["gcp"]["client_config"]
-            config = json.loads(config_str)
-
-            flow = Flow.from_client_config(config, scopes=SCOPES, redirect_uri="https://smart-expense-tracker-8sugdqlzf2rp2f5mkpt5tl.streamlit.app")
+            # ✅ Extract code from full redirect URL
+            code = auth_response.split("code=")[1].split("&")[0]
 
             # ✅ Fetch token using the code
             flow.fetch_token(code=code)
             creds = flow.credentials
             st.session_state.credentials = creds
 
-            # ✅ Get user's email from Gmail API
+            # ✅ Get user's Gmail address
             service = build('gmail', 'v1', credentials=creds)
             user_info = service.users().getProfile(userId='me').execute()
             st.session_state.user_email = user_info['emailAddress']
@@ -52,7 +61,7 @@ def show_login():
             st.rerun()
 
         except Exception as e:
-            st.error(f"❌ Authentication failed. Error: {str(e)}")
+            st.error(f"❌ Authentication failed. Error: {e}")
 
 
 def setup_sidebar(default_start, default_end):
