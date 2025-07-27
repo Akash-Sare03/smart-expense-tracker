@@ -12,31 +12,38 @@ import json
 def show_login():
     st.subheader("🔐 Connect your Gmail account")
 
-    # ✅ Load credentials from secrets
-    config_str = st.secrets["gcp"]["client_config"]
-    client_config = json.loads(config_str)
-
-    redirect_uri = "https://smart-expense-tracker-8sugdqlzf2rp2f5mkpt5tl.streamlit.app"
-
-    flow = Flow.from_client_config(
-        client_config,
-        scopes=SCOPES,
-        redirect_uri=redirect_uri
+    st.markdown("👉 Click the link below to log in with your Gmail:")
+    st.markdown(
+        "[🔗 Click here to login with Google](https://accounts.google.com/o/oauth2/auth)",
+        unsafe_allow_html=True
     )
 
-    auth_url, _ = flow.authorization_url(prompt='consent')
-
-    st.markdown(f"[👉 Click here to login with Google]({auth_url})", unsafe_allow_html=True)
-
-    auth_code = st.text_input("🔐 Paste the authorization code here:")
+    # 📷 Login flow guidance image (you can also use a GIF link here)
+    
+    st.markdown("🔑 Paste the **full URL** you were redirected to (we'll extract the code):")
+    auth_url = st.text_input("🔗 Redirected URL")
 
     if st.button("Submit Code"):
+        if "code=" not in auth_url:
+            st.error("❌ URL does not contain a valid authorization code.")
+            return
+
         try:
-            flow.fetch_token(code=auth_code)
+            # ✅ Extract the authorization code from URL
+            code = auth_url.split("code=")[1].split("&")[0]
+
+            # ✅ Load credentials from Streamlit secrets
+            config_str = st.secrets["gcp"]["client_config"]
+            config = json.loads(config_str)
+
+            flow = Flow.from_client_config(config, scopes=SCOPES, redirect_uri="https://smart-expense-tracker-8sugdqlzf2rp2f5mkpt5tl.streamlit.app")
+
+            # ✅ Fetch token using the code
+            flow.fetch_token(code=code)
             creds = flow.credentials
             st.session_state.credentials = creds
 
-            # ✅ Get user email
+            # ✅ Get user's email from Gmail API
             service = build('gmail', 'v1', credentials=creds)
             user_info = service.users().getProfile(userId='me').execute()
             st.session_state.user_email = user_info['emailAddress']
@@ -45,7 +52,8 @@ def show_login():
             st.rerun()
 
         except Exception as e:
-            st.error(f"❌ Login failed: {e}")
+            st.error(f"❌ Authentication failed. Error: {str(e)}")
+
 
 def setup_sidebar(default_start, default_end):
     start_date = st.sidebar.date_input("Start Date", default_start.date())
