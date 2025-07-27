@@ -16,7 +16,7 @@ def show_login():
     config_str = st.secrets["gcp"]["client_config"]
     client_config = json.loads(config_str)
 
-    redirect_uri = "https://smart-expense-tracker-8sugdqlzf2rp2f5mkpt5tl.streamlit.app/"
+    redirect_uri = "https://smart-expense-tracker-8sugdqlzf2rp2f5mkpt5tl.streamlit.app"
 
     flow = Flow.from_client_config(
         client_config,
