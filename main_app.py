@@ -9,6 +9,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 import pandas as pd
 from datetime import datetime, timedelta
 import os
+import json
 
 # ✅ UI setup
 st.set_page_config(page_title="Smart Expense Tracker",  page_icon="favicon.png", layout="wide")
@@ -46,7 +47,10 @@ if st.sidebar.button("🔄 Fetch Transactions"):
             )
 
         if df.empty:
-            st.warning("No transactions found for the selected date range.")
+            st.warning("No transactions found for the selected date range." \
+            "\n\n🔍 If you've made UPI, GPay, or app-based payments, please check if you received confirmation emails." \
+            "\n\n📩 This app relies on email notifications to detect transactions.")
+
             st.stop()
 
         st.session_state.fetched_df = df
@@ -76,6 +80,3 @@ show_dashboard(df)
 
 # ✅ Show footer
 show_footer()
-
-
-

@@ -6,38 +6,37 @@ import pandas as pd
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from utils import SCOPES
-from google.oauth2.credentials import Credentials
-import os
 import json
 
-
-from google.oauth2.credentials import Credentials
-import os
-import json
 
 def show_login():
-    st.subheader("🔐 Connect your Gmail account")
 
-    token_path = "token.json"
-    if os.path.exists(token_path):
-        # ✅ Load saved credentials from Flask login
-        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+    st.subheader("🔐 Connect your Gmail account")
+    
+    st.markdown("""
+    ℹ️ **Instructions to login:**
+    1. Click the **Login with Google** button below.
+    2. A browser tab will open to complete sign-in.
+    3. Once it says *"Authentication complete"*, just **close that tab**.
+    4. Come back here to see your expense dashboard.
+    """)
+
+
+    if st.button("Login with Google"):
+        # Load credentials from secrets.toml
+        client_config = json.loads(st.secrets["gcp"]["client_config"])
+
+        flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
+        creds = flow.run_local_server(port=8080)
         st.session_state.credentials = creds
 
-        # ✅ Extract user's email
-        from googleapiclient.discovery import build
+        # Fetch Gmail email
         service = build('gmail', 'v1', credentials=creds)
         user_info = service.users().getProfile(userId='me').execute()
         st.session_state.user_email = user_info['emailAddress']
 
         st.success(f"✅ Logged in as: {st.session_state.user_email}")
-        return
-
-    # 🔁 If token.json not yet created, guide user
-    st.warning("Please login via the Flask Auth Server first.")
-    st.markdown("👉 [Click here to login](https://smart-expense-login.onrender.com/login)")
-
-
+        st.rerun()
 
 def setup_sidebar(default_start, default_end):
     start_date = st.sidebar.date_input("Start Date", default_start.date())
@@ -133,6 +132,3 @@ def show_footer():
         "</div>",
         unsafe_allow_html=True
     )
-
-
-

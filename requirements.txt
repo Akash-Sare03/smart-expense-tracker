@@ -1,9 +1,8 @@
 streamlit
 pandas
-google-auth
-google-auth-oauthlib>=1.0.0
 google-api-python-client
+google-auth
+google-auth-oauthlib
 beautifulsoup4
 matplotlib
 seaborn
-flask

@@ -5,8 +5,3 @@ backgroundColor = "#F9FAFC"
 secondaryBackgroundColor = "#FFFFFF"
 textColor = "#1E1E1E"
 font = "sans serif"
-
-[server]
-headless = true
-port = 8080
-enableCORS = false
