@@ -11,35 +11,41 @@ import json
 
 def show_login():
     st.subheader("🔐 Connect your Gmail account")
-    if st.button("Login with Google"):
-        # ✅ Load from Streamlit Cloud secrets
-        config_str = st.secrets["gcp"]["client_config"]
-        config = json.loads(config_str)
 
-        # ✅ Dynamically set redirect URI to Streamlit app URL
-        flow = Flow.from_client_config(
-            config,
-            scopes=SCOPES,
-            redirect_uri="https://smart-expense-tracker-8sugdqlzf2rp2f5mkpt5tl.streamlit.app"
-        )
+    # ✅ Load credentials from secrets
+    config_str = st.secrets["gcp"]["client_config"]
+    client_config = json.loads(config_str)
 
-        auth_url, _ = flow.authorization_url(prompt='consent')
-        st.markdown(f"[Click here to authenticate with Google]({auth_url})")
+    redirect_uri = "https://smart-expense-tracker-8sugdqlzf2rp2f5mkpt5tl.streamlit.app/"
 
-        # Wait for user to paste the token manually (Streamlit cloud safe fallback)
-        auth_code = st.text_input("Paste the authorization code here")
-        if auth_code:
+    flow = Flow.from_client_config(
+        client_config,
+        scopes=SCOPES,
+        redirect_uri=redirect_uri
+    )
+
+    auth_url, _ = flow.authorization_url(prompt='consent')
+
+    st.markdown(f"[👉 Click here to login with Google]({auth_url})", unsafe_allow_html=True)
+
+    auth_code = st.text_input("🔐 Paste the authorization code here:")
+
+    if st.button("Submit Code"):
+        try:
             flow.fetch_token(code=auth_code)
             creds = flow.credentials
             st.session_state.credentials = creds
 
-            # ✅ Get user's email
+            # ✅ Get user email
             service = build('gmail', 'v1', credentials=creds)
             user_info = service.users().getProfile(userId='me').execute()
             st.session_state.user_email = user_info['emailAddress']
 
             st.success(f"✅ Logged in as: {st.session_state.user_email}")
             st.rerun()
+
+        except Exception as e:
+            st.error(f"❌ Login failed: {e}")
 
 def setup_sidebar(default_start, default_end):
     start_date = st.sidebar.date_input("Start Date", default_start.date())
