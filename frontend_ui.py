@@ -10,33 +10,36 @@ import json
 
 
 def show_login():
-
     st.subheader("🔐 Connect your Gmail account")
-    
-    st.markdown("""
-    ℹ️ **Instructions to login:**
-    1. Click the **Login with Google** button below.
-    2. A browser tab will open to complete sign-in.
-    3. Once it says *"Authentication complete"*, just **close that tab**.
-    4. Come back here to see your expense dashboard.
-    """)
-
-
     if st.button("Login with Google"):
-        # Load credentials from secrets.toml
-        client_config = json.loads(st.secrets["gcp"]["client_config"])
+        # ✅ Load from Streamlit Cloud secrets
+        config_str = st.secrets["gcp"]["client_config"]
+        config = json.loads(config_str)
 
-        flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
-        creds = flow.run_local_server(port=8080)
-        st.session_state.credentials = creds
+        # ✅ Dynamically set redirect URI to Streamlit app URL
+        flow = Flow.from_client_config(
+            config,
+            scopes=SCOPES,
+            redirect_uri="https://smart-expense-tracker-8sugdqlzf2rp2f5mkpt5tl.streamlit.app"
+        )
 
-        # Fetch Gmail email
-        service = build('gmail', 'v1', credentials=creds)
-        user_info = service.users().getProfile(userId='me').execute()
-        st.session_state.user_email = user_info['emailAddress']
+        auth_url, _ = flow.authorization_url(prompt='consent')
+        st.markdown(f"[Click here to authenticate with Google]({auth_url})")
 
-        st.success(f"✅ Logged in as: {st.session_state.user_email}")
-        st.rerun()
+        # Wait for user to paste the token manually (Streamlit cloud safe fallback)
+        auth_code = st.text_input("Paste the authorization code here")
+        if auth_code:
+            flow.fetch_token(code=auth_code)
+            creds = flow.credentials
+            st.session_state.credentials = creds
+
+            # ✅ Get user's email
+            service = build('gmail', 'v1', credentials=creds)
+            user_info = service.users().getProfile(userId='me').execute()
+            st.session_state.user_email = user_info['emailAddress']
+
+            st.success(f"✅ Logged in as: {st.session_state.user_email}")
+            st.rerun()
 
 def setup_sidebar(default_start, default_end):
     start_date = st.sidebar.date_input("Start Date", default_start.date())
