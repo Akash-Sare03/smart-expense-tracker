@@ -5,7 +5,7 @@ import streamlit as st
 from frontend_ui import setup_sidebar, show_dashboard, show_login, logout_button, show_footer
 from gmail_fetcher import fetch_transaction_emails_by_date
 from utils import SCOPES
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import Flow, InstalledAppFlow
 import pandas as pd
 from datetime import datetime, timedelta
 import os
